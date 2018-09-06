@@ -16,7 +16,7 @@ if sys.version_info <= (2, 7):
     sys.exit(1)
 
 name = "ldap-user"
-version = "0.1"
+version = "0.2"
 url = "https://github.com/meisanggou/ldapuser"
 license = "MIT"
 author = "meisanggou"
@@ -24,16 +24,20 @@ short_description = "use ldap verify user"
 long_description = """use ldap verify user"""
 keywords = "ldap-user"
 install_requires = ["python-ldap"]
+entry_points = {'console_scripts': [
+    'jy-ldap-config=ldap_user.cli:create_config'
+]}
 
 setup(name=name,
       version=version,
       author=author,
       author_email="zhouheng@gene.ac",
       url=url,
-      packages=["ldap-user"],
+      packages=["ldap_user"],
       license=license,
       description=short_description,
       long_description=long_description,
       keywords=keywords,
-      install_requires=install_requires
+      install_requires=install_requires,
+      entry_points=entry_points
       )
