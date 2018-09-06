@@ -7,6 +7,7 @@ import datetime
 import ldap
 from ldap import SCOPE_SUBTREE as LDAP_SCOPE_SUBTREE
 from ldap import modlist, LDAPError
+from ldap_user.util.string_tool import encode
 from ldap_user.util.verify_secret import verify, SUPPORT_METHOD
 
 __author__ = '鹛桑够'
@@ -23,6 +24,7 @@ class LDAPUser(object):
     password_compile = re.compile("^{(%s)}(\S+)$" % "|".join(SUPPORT_METHOD))
 
     def __init__(self, ldap_uri, base_dn, admin_user, admin_password, home_base_directory=None, group_id=None):
+        self.ldap_uri = ldap_uri
         self.ldap_com = ldap.initialize(ldap_uri)
         self.ldap_base_dn = base_dn
         if home_base_directory is not None:
@@ -39,7 +41,6 @@ class LDAPUser(object):
         items = self.ldap_com.search_s(self.people_base_cn, LDAP_SCOPE_SUBTREE, filter_str, attributes)
         max_number = 1000
         for item in items:
-            print(item)
             if "uidNumber" in item[1]:
                 u_number = int(item[1]["uidNumber"][0])
                 if max_number < u_number:
@@ -56,26 +57,25 @@ class LDAPUser(object):
         dn = "uid=%s,%s" % (user_name, self.people_base_cn)
         attributes = dict()
         for key in ("uid", "cn", "sn"):
-            attributes[key] = user_name
+            attributes[key] = encode(user_name)
         attributes["objectClass"] = ["top", "person", "inetOrgPerson", "posixAccount", "organizationalPerson",
                                      "shadowAccount"]
         if uid_number is None:
-            attributes["uidNumber"] = "%s" % self.__get_next_uid_number()
+            attributes["uidNumber"] = encode(self.__get_next_uid_number())
         else:
-            attributes["uidNumber"] = uid_number
+            attributes["uidNumber"] = encode(uid_number)
         if gid_number is None:
-            attributes["gidNumber"] = self.GROUP_ID_NUMBER
+            attributes["gidNumber"] = encode(self.GROUP_ID_NUMBER)
         else:
-            attributes["gidNumber"] = "%s" % gid_number
+            attributes["gidNumber"] = encode(gid_number)
         if attributes["gidNumber"] is None:
             raise LDAPError("please set gidNumber")
         if home_directory is None:
             home_directory = os.path.join(self.HOME_BASE_DIRECTORY, user_name)
-        attributes["homeDirectory"] = home_directory
-        attributes["loginShell"] = self.LOGIN_SHELL
-        print(attributes)
+        attributes["homeDirectory"] = encode(home_directory)
+        attributes["loginShell"] = encode(self.LOGIN_SHELL)
         if self.CREATOR is not None:
-            attributes["givenName"] = self.CREATOR
+            attributes["givenName"] = encode(self.CREATOR)
         mod_list = ldap.modlist.addModlist(attributes)
         self.ldap_com.add_s(dn, mod_list)
 
