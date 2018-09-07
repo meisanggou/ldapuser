@@ -4,6 +4,9 @@
 yum install openldap-devel
 pip install python-ldap
 
+## 0.4
+jy-ldap-config 支持 -e 将生成的配置文件，设置环境变量
+
 ## 0.3
 add_user 传入的参数支持为unicode自动进行encode
 

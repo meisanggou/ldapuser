@@ -16,7 +16,7 @@ if sys.version_info <= (2, 7):
     sys.exit(1)
 
 name = "ldap-user"
-version = "0.3"
+version = "0.4"
 url = "https://github.com/meisanggou/ldapuser"
 license = "MIT"
 author = "meisanggou"

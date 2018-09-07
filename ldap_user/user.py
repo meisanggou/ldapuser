@@ -6,6 +6,7 @@ import re
 import datetime
 import ldap
 from ldap import SCOPE_SUBTREE as LDAP_SCOPE_SUBTREE
+from ldap.ldapobject import ReconnectLDAPObject
 from ldap import modlist, LDAPError
 from ldap_user.util.string_tool import encode
 from ldap_user.util.verify_secret import verify, SUPPORT_METHOD
@@ -25,7 +26,8 @@ class LDAPUser(object):
 
     def __init__(self, ldap_uri, base_dn, admin_user, admin_password, home_base_directory=None, group_id=None):
         self.ldap_uri = ldap_uri
-        self.ldap_com = ldap.initialize(ldap_uri)
+        self.ldap_com = ReconnectLDAPObject(ldap_uri, retry_max=10, retry_delay=3)
+        # self.ldap_com = ldap.initialize(ldap_uri)
         self.ldap_base_dn = base_dn
         if home_base_directory is not None:
             self.HOME_BASE_DIRECTORY = home_base_directory
