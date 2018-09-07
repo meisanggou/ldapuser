@@ -1,5 +1,9 @@
 # ldap_user
 
+## required
+yum install openldap-devel
+pip install python-ldap
+
 ## 0.3
 add_user 传入的参数支持为unicode自动进行encode
 

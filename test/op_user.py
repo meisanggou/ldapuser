@@ -7,7 +7,7 @@ __author__ = '鹛桑够'
 
 LDAPConfig.create("ldap.conf", admin_user="root", admin_password="geneac2018")
 l_user = LDAPConfig.load("ldap.conf")
-t_user = "zh_test2"
+t_user = "zh_test3"
 d_r = l_user.delete_user(t_user)
 print(d_r)
 l_user.add_user(t_user)
