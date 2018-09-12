@@ -4,6 +4,10 @@
 yum install openldap-devel
 pip install python-ldap
 
+## 0.5
+支持解锁pwdAccountLockedTime
+支持验证CREATOR
+
 ## 0.4
 jy-ldap-config 支持 -e 将生成的配置文件，设置环境变量
 

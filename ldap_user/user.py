@@ -21,6 +21,7 @@ class LDAPUser(object):
     HOME_BASE_DIRECTORY = "/home"
     GROUP_ID_NUMBER = None
     CREATOR = None
+    VERIFY_CREATOR = True
 
     password_compile = re.compile("^{(%s)}(\S+)$" % "|".join(SUPPORT_METHOD))
 
@@ -98,12 +99,27 @@ class LDAPUser(object):
         return self.expire_user(user_name)
 
     def unlock_user(self, user_name):
-        return self.expire_user(user_name, "")
+        user_entry = self.exist(user_name, "pwdAccountLockedTime", "shadowExpire")
+        if user_entry is None:
+            return False
+        old_attributes = user_entry[1]
+        attributes = dict(**old_attributes)
+        if "pwdAccountLockedTime" in attributes:
+            attributes["pwdAccountLockedTime"] = ""
+        if "shadowExpire" in attributes:
+            attributes["shadowExpire"] = ""
+        mod_list = ldap.modlist.modifyModlist(old_attributes, attributes)
+        return self.ldap_com.modify_s(user_entry[0], mod_list)
+
+    def _verify_creator(self, user_entry):
+        if self.CREATOR is None or self.VERIFY_CREATOR is False:
+            return True
+        if "givenName" not in user_entry:
+            return False
+        return self.CREATOR in user_entry["givenName"]
 
     def exist(self, user_name, *attributes):
         l_attributes = set(attributes)
-        # l_attributes.add("userPassword")
-        # l_attributes.add("shadowExpire")
         sr = self.ldap_com.search_s(self.ldap_base_dn, LDAP_SCOPE_SUBTREE, "uid=%s" % user_name, l_attributes)
         if len(sr) <= 0:
             return None
@@ -124,16 +140,29 @@ class LDAPUser(object):
         attr = user_entry[1]
         if "userPassword" not in attr:
             return False
-
         ldap_password = attr["userPassword"][0]
         return self.verify_password(password, ldap_password)
+
+    def login2(self, user_name, password):
+        user_entry = self.exist(user_name)
+        if user_entry is None:
+            return False
+        attr = user_entry[1]
+        if "userPassword" not in attr:
+            return False
+        try:
+            self.ldap_com.simple_bind_s(user_entry[0], password)
+            return True
+        except ldap.INVALID_CREDENTIALS:
+            return False
 
     def set_password(self, user_name, new_password):
         user_entry = self.exist(user_name)
         if user_entry is None:
             return False
+        if self._verify_creator(user_entry) is False:
+            return False
         pr = self.ldap_com.passwd_s(user_entry[0], None, new_password)
         if pr[0] is None and pr[1] is None:
             return True
         return False
-
